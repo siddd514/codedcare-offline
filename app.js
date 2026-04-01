@@ -1,4 +1,5 @@
 // CodedCare vNext: multi-module + voice + optional auto-translate + scoring engine
+// + NEW: TTS Voice Picker for better accents/voices per language.
 
 const LS = {
   uiLang: "cc_ui_lang",
@@ -8,7 +9,8 @@ const LS = {
   mic: "cc_mic",
   speechLang: "cc_speech_lang",
   autoTranslate: "cc_auto_translate",
-  translateEndpoint: "cc_translate_endpoint"
+  translateEndpoint: "cc_translate_endpoint",
+  ttsVoiceURI: "cc_tts_voice_uri"
 };
 
 let uiLang = localStorage.getItem(LS.uiLang) || "en";
@@ -17,6 +19,7 @@ let micEnabled = JSON.parse(localStorage.getItem(LS.mic) || "false");
 let speechLang = localStorage.getItem(LS.speechLang) || "en-US";
 let autoTranslate = JSON.parse(localStorage.getItem(LS.autoTranslate) || "false");
 let translateEndpoint = localStorage.getItem(LS.translateEndpoint) || "";
+let ttsVoiceURI = localStorage.getItem(LS.ttsVoiceURI) || "";
 
 let modules = [];
 let protocol = null;
@@ -32,12 +35,13 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 
+/* =======================
+   UI strings (translated)
+   ======================= */
 const UI = {
   en: {
     module: "Module",
     language: "Language",
-    readAloud: "Read Aloud",
-    voiceInput: "Voice Input",
     settings: "Settings",
     reset: "Reset",
     back: "Back",
@@ -52,11 +56,17 @@ const UI = {
     safetyBody:
       "This tool is for training/decision-support. It does not diagnose or replace clinical judgment. Do not enter identifying patient information.",
     footer: "Offline after first load. Voice recognition depends on browser support.",
+
     speechLang: "Speech input language (what YOU speak)",
     autoTranslate: "Auto-translate speech into UI language (online only)",
     endpoint: "Translation endpoint (optional)",
     endpointHint:
       "If endpoint is blank, auto-translate is disabled. Public translation servers may be unreliable and are not for sensitive info.",
+
+    ttsVoice: "Read-aloud voice (TTS)",
+    ttsVoiceHint: "Voices depend on the device. Pick one that sounds natural for the selected UI language.",
+    testVoice: "Test voice",
+
     ttsOn: "Read Aloud: On",
     ttsOff: "Read Aloud: Off",
     micOn: "Voice Input: On",
@@ -65,8 +75,6 @@ const UI = {
   es: {
     module: "Módulo",
     language: "Idioma",
-    readAloud: "Leer en voz alta",
-    voiceInput: "Entrada de voz",
     settings: "Ajustes",
     reset: "Reiniciar",
     back: "Atrás",
@@ -81,11 +89,17 @@ const UI = {
     safetyBody:
       "Esta herramienta es para entrenamiento/apoyo a decisiones. No diagnostica ni reemplaza el juicio clínico. No ingreses información identificable del paciente.",
     footer: "Sin conexión después de la primera carga. El reconocimiento de voz depende del navegador.",
+
     speechLang: "Idioma de entrada de voz (lo que TÚ hablas)",
     autoTranslate: "Auto-traducir voz al idioma de la interfaz (solo en línea)",
     endpoint: "Endpoint de traducción (opcional)",
     endpointHint:
       "Si está vacío, la auto-traducción se desactiva. Servidores públicos pueden ser poco confiables y no son para info sensible.",
+
+    ttsVoice: "Voz de lectura (TTS)",
+    ttsVoiceHint: "Las voces dependen del dispositivo. Elige una que suene natural para el idioma de la interfaz.",
+    testVoice: "Probar voz",
+
     ttsOn: "Leer: Activado",
     ttsOff: "Leer: Desactivado",
     micOn: "Voz: Activada",
@@ -94,8 +108,6 @@ const UI = {
   fr: {
     module: "Module",
     language: "Langue",
-    readAloud: "Lecture audio",
-    voiceInput: "Entrée vocale",
     settings: "Paramètres",
     reset: "Réinitialiser",
     back: "Retour",
@@ -110,11 +122,17 @@ const UI = {
     safetyBody:
       "Outil d’aide à la décision/formation. Ne pose pas de diagnostic et ne remplace pas le jugement clinique. Ne pas saisir d’informations identifiantes.",
     footer: "Hors ligne après le premier chargement. La reconnaissance vocale dépend du navigateur.",
+
     speechLang: "Langue de saisie vocale (ce que VOUS dites)",
     autoTranslate: "Traduire automatiquement vers la langue UI (en ligne uniquement)",
     endpoint: "Endpoint de traduction (optionnel)",
     endpointHint:
       "Si vide, la traduction auto est désactivée. Les services publics peuvent être instables et ne conviennent pas aux infos sensibles.",
+
+    ttsVoice: "Voix de lecture (TTS)",
+    ttsVoiceHint: "Les voix dépendent de l’appareil. Choisissez une voix naturelle pour la langue UI.",
+    testVoice: "Tester la voix",
+
     ttsOn: "Lecture : Activée",
     ttsOff: "Lecture : Désactivée",
     micOn: "Voix : Activée",
@@ -123,8 +141,6 @@ const UI = {
   hi: {
     module: "मॉड्यूल",
     language: "भाषा",
-    readAloud: "आवाज़ में पढ़ें",
-    voiceInput: "वॉइस इनपुट",
     settings: "सेटिंग्स",
     reset: "रीसेट",
     back: "वापस",
@@ -139,11 +155,17 @@ const UI = {
     safetyBody:
       "यह टूल प्रशिक्षण/निर्णय‑सहायता के लिए है। यह निदान नहीं करता और क्लिनिकल निर्णय का विकल्प नहीं है। पहचान योग्य जानकारी न डालें।",
     footer: "पहली बार लोड होने के बाद ऑफ़लाइन। वॉइस रिकग्निशन ब्राउज़र पर निर्भर है।",
+
     speechLang: "स्पीच इनपुट भाषा (आप क्या बोलते हैं)",
     autoTranslate: "स्पीच को UI भाषा में ऑटो‑ट्रांसलेट (केवल ऑनलाइन)",
     endpoint: "ट्रांसलेशन एंडपॉइंट (वैकल्पिक)",
     endpointHint:
       "अगर खाली है तो ऑटो‑ट्रांसलेट बंद रहेगा। पब्लिक सर्वर भरोसेमंद नहीं हो सकते और संवेदनशील जानकारी के लिए नहीं हैं।",
+
+    ttsVoice: "रीड‑अलाउड आवाज़ (TTS)",
+    ttsVoiceHint: "आवाज़ें डिवाइस पर निर्भर हैं। UI भाषा के लिए प्राकृतिक आवाज़ चुनें।",
+    testVoice: "वॉइस टेस्ट",
+
     ttsOn: "पढ़ें: चालू",
     ttsOff: "पढ़ें: बंद",
     micOn: "वॉइस: चालू",
@@ -152,8 +174,6 @@ const UI = {
   sw: {
     module: "Moduli",
     language: "Lugha",
-    readAloud: "Soma kwa sauti",
-    voiceInput: "Ingizo la sauti",
     settings: "Mipangilio",
     reset: "Weka upya",
     back: "Rudi",
@@ -168,11 +188,17 @@ const UI = {
     safetyBody:
       "Chombo hiki ni cha mafunzo/msaada wa maamuzi. Hakitoi utambuzi na hakibadilishi uamuzi wa kliniki. Usiingize taarifa zinazomtambulisha mgonjwa.",
     footer: "Hufanya kazi bila mtandao baada ya kupakia mara ya kwanza. Utambuzi wa sauti hutegemea kivinjari.",
+
     speechLang: "Lugha ya sauti (unachoongea)",
     autoTranslate: "Tafsiri sauti kwenda lugha ya UI (mtandaoni tu)",
     endpoint: "Anwani ya kutafsiri (si lazima)",
     endpointHint:
       "Ikiwa tupu, tafsiri ya moja kwa moja itazimwa. Huduma za umma zinaweza kutokua thabiti na si kwa taarifa nyeti.",
+
+    ttsVoice: "Sauti ya kusoma (TTS)",
+    ttsVoiceHint: "Sauti hutegemea kifaa. Chagua sauti inayofaa kwa lugha ya UI.",
+    testVoice: "Jaribu sauti",
+
     ttsOn: "Sauti: Washa",
     ttsOff: "Sauti: Zima",
     micOn: "Sauti‑ingizo: Washa",
@@ -181,8 +207,6 @@ const UI = {
   ar: {
     module: "الوحدة",
     language: "اللغة",
-    readAloud: "قراءة صوتية",
-    voiceInput: "إدخال صوتي",
     settings: "الإعدادات",
     reset: "إعادة ضبط",
     back: "رجوع",
@@ -197,11 +221,17 @@ const UI = {
     safetyBody:
       "هذه الأداة للتدريب/دعم القرار. لا تُشخّص ولا تستبدل الحكم السريري. لا تُدخل معلومات تعريفية عن المريض.",
     footer: "تعمل دون إنترنت بعد أول تحميل. التعرف على الصوت يعتمد على المتصفح.",
+
     speechLang: "لغة الإدخال الصوتي (ما تتحدث به)",
     autoTranslate: "ترجمة الكلام تلقائياً إلى لغة الواجهة (عبر الإنترنت فقط)",
     endpoint: "عنوان خدمة الترجمة (اختياري)",
     endpointHint:
       "إذا كان فارغاً فسيتم تعطيل الترجمة التلقائية. الخدمات العامة قد تكون غير مستقرة وغير مناسبة للمعلومات الحساسة.",
+
+    ttsVoice: "صوت القراءة (TTS)",
+    ttsVoiceHint: "الأصوات تعتمد على الجهاز. اختر صوتاً مناسباً للغة الواجهة.",
+    testVoice: "اختبار الصوت",
+
     ttsOn: "القراءة: تشغيل",
     ttsOff: "القراءة: إيقاف",
     micOn: "الصوت: تشغيل",
@@ -213,52 +243,51 @@ function ui(key){
   return UI[uiLang]?.[key] ?? UI.en[key] ?? key;
 }
 
+function t(obj) {
+  if (!obj) return "";
+  if (typeof obj === "string") return obj;
+  return obj[uiLang] || obj["en"] || "";
+}
+
 function applyUiStrings(){
-  // Direction + language
   document.documentElement.lang = uiLang;
   const isRTL = uiLang === "ar";
   document.documentElement.dir = isRTL ? "rtl" : "ltr";
   document.body.classList.toggle("rtl", isRTL);
 
-  // Header pills
   $("moduleLabel").textContent = ui("module");
   $("uiLangLabel").textContent = ui("language");
 
-  // Buttons
   $("settingsBtn").textContent = ui("settings");
   $("resetBtn").textContent = ui("reset");
   $("backBtn").textContent = ui("back");
   $("nextBtn").textContent = ui("next");
   $("repeatBtn").textContent = ui("repeat");
 
-  // Summary
   $("summaryTitle").textContent = ui("summary");
   $("copyBtn").textContent = ui("copy");
   $("downloadBtn").textContent = ui("download");
 
-  // Safety note + footer
   $("safetyTitle").textContent = ui("safetyTitle");
   $("safetyBody").textContent = ui("safetyBody");
   $("footerText").textContent = ui("footer");
 
-  // Modal labels
   $("settingsTitle").textContent = ui("settings");
   $("closeSettingsBtn").textContent = ui("close");
   $("saveSettingsBtn").textContent = ui("save");
+
   $("speechLangLbl").textContent = ui("speechLang");
+  // checkbox label: keep input, set the text node
   $("autoTranslateLbl").lastChild.textContent = " " + ui("autoTranslate");
   $("endpointLbl").textContent = ui("endpoint");
   $("endpointHint").textContent = ui("endpointHint");
 
-  // Toggle buttons (stateful labels)
+  $("ttsVoiceLbl").textContent = ui("ttsVoice");
+  $("ttsVoiceHint").textContent = ui("ttsVoiceHint");
+  $("testVoiceBtn").textContent = ui("testVoice");
+
   $("ttsBtn").textContent = ttsEnabled ? ui("ttsOn") : ui("ttsOff");
   $("micBtn").textContent = micEnabled ? ui("micOn") : ui("micOff");
-}
-
-function t(obj) {
-  if (!obj) return "";
-  if (typeof obj === "string") return obj;
-  return obj[uiLang] || obj["en"] || "";
 }
 
 function saveAll() {
@@ -268,9 +297,13 @@ function saveAll() {
   localStorage.setItem(LS.speechLang, speechLang);
   localStorage.setItem(LS.autoTranslate, JSON.stringify(autoTranslate));
   localStorage.setItem(LS.translateEndpoint, translateEndpoint);
+  localStorage.setItem(LS.ttsVoiceURI, ttsVoiceURI);
   localStorage.setItem(LS.answers, JSON.stringify(state.answers));
 }
 
+/* =======================
+   Modules / Protocol
+   ======================= */
 async function loadModules() {
   const res = await fetch("modules.json");
   modules = await res.json();
@@ -287,13 +320,110 @@ async function loadProtocolByModuleId(moduleId) {
   $("status").textContent = t(protocol.title);
 }
 
+function populateModulesDropdown() {
+  const sel = $("moduleSelect");
+  sel.innerHTML = "";
+  for (const m of modules) {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = t(m.title);
+    sel.appendChild(opt);
+  }
+
+  const saved = localStorage.getItem(LS.moduleId) || modules[0]?.id;
+  sel.value = saved || modules[0]?.id;
+}
+
+async function switchModule(moduleId) {
+  state.history = [];
+  state.currentQ = null;
+  state.answers = {};
+  localStorage.removeItem(LS.answers);
+  await loadProtocolByModuleId(moduleId);
+  renderQuestion(protocol.start);
+}
+
+/* =======================
+   PWA / Service worker
+   ======================= */
 function initPWA() {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
   }
 }
 
-/* TTS */
+/* =======================
+   TTS voice picker (NEW)
+   ======================= */
+let ttsVoices = [];
+
+function getVoicesAsync() {
+  return new Promise((resolve) => {
+    if (!("speechSynthesis" in window)) return resolve([]);
+
+    const got = speechSynthesis.getVoices();
+    if (got && got.length) return resolve(got);
+
+    speechSynthesis.onvoiceschanged = () => {
+      const v = speechSynthesis.getVoices();
+      resolve(v || []);
+    };
+
+    setTimeout(() => resolve(speechSynthesis.getVoices() || []), 700);
+  });
+}
+
+function uiLangPrefixes() {
+  if (uiLang === "en") return ["en"];
+  if (uiLang === "es") return ["es"];
+  if (uiLang === "fr") return ["fr"];
+  if (uiLang === "hi") return ["hi"];
+  if (uiLang === "sw") return ["sw"];
+  if (uiLang === "ar") return ["ar"];
+  return ["en"];
+}
+
+function voiceMatchesUILang(v) {
+  const vlang = (v.lang || "").toLowerCase();
+  return uiLangPrefixes().some(p => vlang.startsWith(p));
+}
+
+function populateVoiceDropdown() {
+  const sel = $("ttsVoiceSelect");
+  if (!sel) return;
+
+  sel.innerHTML = "";
+
+  const matching = ttsVoices.filter(voiceMatchesUILang);
+  const list = matching.length ? matching : ttsVoices;
+
+  const autoOpt = document.createElement("option");
+  autoOpt.value = "";
+  autoOpt.textContent = uiLang === "ar" ? "تلقائي (أفضل صوت)" : "Auto (best available)";
+  sel.appendChild(autoOpt);
+
+  for (const v of list) {
+    const opt = document.createElement("option");
+    opt.value = v.voiceURI;
+    opt.textContent = `${v.name} — ${v.lang}`;
+    sel.appendChild(opt);
+  }
+
+  sel.value = ttsVoiceURI || "";
+}
+
+function pickVoiceForUtterance() {
+  if (!("speechSynthesis" in window)) return null;
+
+  if (ttsVoiceURI) {
+    const exact = ttsVoices.find(v => v.voiceURI === ttsVoiceURI);
+    if (exact) return exact;
+  }
+
+  const match = ttsVoices.find(voiceMatchesUILang);
+  return match || null;
+}
+
 function ttsLangCode(){
   if (uiLang === "es") return "es-ES";
   if (uiLang === "fr") return "fr-FR";
@@ -302,6 +432,7 @@ function ttsLangCode(){
   if (uiLang === "ar") return "ar-SA";
   return "en-US";
 }
+
 function speak(text) {
   state.lastSpoken = text;
   if (!ttsEnabled) return;
@@ -311,12 +442,18 @@ function speak(text) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = ttsLangCode();
+
+    const chosen = pickVoiceForUtterance();
+    if (chosen) u.voice = chosen;
+
     u.rate = 1.0;
     window.speechSynthesis.speak(u);
   } catch {}
 }
 
-/* Speech recognition */
+/* =======================
+   Speech recognition + translation
+   ======================= */
 let recognition = null;
 
 function setupRecognition() {
@@ -404,13 +541,17 @@ function startListening(qid) {
   try { recognition.start(); } catch {}
 }
 
-/* Protocol helpers */
+/* =======================
+   Protocol engine
+   ======================= */
 function getQuestion(qid) {
   return protocol?.questions?.[qid] || null;
 }
+
 function stepLabel() {
   return `Step ${state.history.length + 1}`;
 }
+
 function enableNextIfValid(qid) {
   const q = getQuestion(qid);
   if (!q) return;
@@ -491,7 +632,9 @@ function computeRuleOutcome() {
   return protocol.decision?.defaultOutcome || null;
 }
 
-/* Render */
+/* =======================
+   Render
+   ======================= */
 function renderQuestion(qid) {
   state.currentQ = qid;
 
@@ -674,7 +817,10 @@ function renderEnd() {
       lines.push(`- ${t(q.text)} -> ${opt ? t(opt.label) : val}`);
     } else if (q.type === "multi") {
       const arr = Array.isArray(val) ? val : [];
-      const labels = arr.map(v => (q.options.find(o => o.value === v) ? t(q.options.find(o => o.value === v).label) : v));
+      const labels = arr.map(v => {
+        const opt = q.options.find(o => o.value === v);
+        return opt ? t(opt.label) : v;
+      });
       lines.push(`- ${t(q.text)} -> ${labels.join(", ") || "(none)"}`);
     } else {
       lines.push(`- ${t(q.text)} -> ${String(val)}`);
@@ -687,7 +833,9 @@ function renderEnd() {
   speak(`${t(outcome.label)}. ${t(outcome.text)}`);
 }
 
-/* Voice commands */
+/* =======================
+   Voice commands
+   ======================= */
 function handleSpoken(qid, spoken) {
   const q = getQuestion(qid);
   if (!q) return;
@@ -725,7 +873,9 @@ function applyOption(qid, q, value) {
   enableNextIfValid(qid);
 }
 
-/* Navigation */
+/* =======================
+   Navigation
+   ======================= */
 function goNext() {
   if (!state.currentQ) return renderQuestion(protocol.start);
 
@@ -758,6 +908,7 @@ function resetAll() {
 function copySummary() {
   navigator.clipboard.writeText($("summaryText").textContent || "");
 }
+
 function downloadSummary() {
   const text = $("summaryText").textContent || "";
   const blob = new Blob([text], { type: "text/plain" });
@@ -771,16 +922,24 @@ function downloadSummary() {
   URL.revokeObjectURL(url);
 }
 
-/* Modal */
+/* =======================
+   Settings modal
+   ======================= */
 function openSettings() {
   $("speechLangSelect").value = speechLang;
   $("autoTranslateToggle").checked = autoTranslate;
   $("translateEndpointInput").value = translateEndpoint;
+
+  // Ensure voice list present + dropdown populated
+  populateVoiceDropdown();
+
   $("modalOverlay").classList.remove("hidden");
 }
+
 function closeSettings() {
   $("modalOverlay").classList.add("hidden");
 }
+
 function saveSettings() {
   speechLang = $("speechLangSelect").value;
   autoTranslate = $("autoTranslateToggle").checked;
@@ -789,30 +948,9 @@ function saveSettings() {
   closeSettings();
 }
 
-/* Modules */
-function populateModulesDropdown() {
-  const sel = $("moduleSelect");
-  sel.innerHTML = "";
-  for (const m of modules) {
-    const opt = document.createElement("option");
-    opt.value = m.id;
-    opt.textContent = t(m.title);
-    sel.appendChild(opt);
-  }
-
-  const saved = localStorage.getItem(LS.moduleId) || modules[0]?.id;
-  sel.value = saved || modules[0]?.id;
-}
-
-async function switchModule(moduleId) {
-  state.history = [];
-  state.currentQ = null;
-  state.answers = {};
-  localStorage.removeItem(LS.answers);
-  await loadProtocolByModuleId(moduleId);
-  renderQuestion(protocol.start);
-}
-
+/* =======================
+   Init
+   ======================= */
 async function init() {
   $("uiLangSelect").value = uiLang;
 
@@ -823,8 +961,13 @@ async function init() {
   await loadProtocolByModuleId(moduleId);
 
   initPWA();
+
+  // Load voices once at startup
+  ttsVoices = await getVoicesAsync();
+
   applyUiStrings();
 
+  // Events
   $("moduleSelect").addEventListener("change", async (e) => {
     await switchModule(e.target.value);
   });
@@ -832,14 +975,24 @@ async function init() {
   $("uiLangSelect").addEventListener("change", async (e) => {
     uiLang = e.target.value;
     saveAll();
+
+    // Refresh voices (some devices load voices lazily)
+    ttsVoices = await getVoicesAsync();
+
     applyUiStrings();
     populateModulesDropdown();
+    populateVoiceDropdown();
+
     renderQuestion(state.currentQ && state.currentQ !== "end" ? state.currentQ : protocol.start);
   });
 
-  $("ttsBtn").addEventListener("click", () => {
+  $("ttsBtn").addEventListener("click", async () => {
     ttsEnabled = !ttsEnabled;
     saveAll();
+
+    // Refresh voices if just enabled
+    if (ttsEnabled) ttsVoices = await getVoicesAsync();
+
     applyUiStrings();
     if (state.currentQ && state.currentQ !== "end") renderQuestion(state.currentQ);
   });
@@ -855,6 +1008,28 @@ async function init() {
   $("settingsBtn").addEventListener("click", openSettings);
   $("closeSettingsBtn").addEventListener("click", closeSettings);
   $("saveSettingsBtn").addEventListener("click", saveSettings);
+
+  // NEW: voice picker events
+  $("ttsVoiceSelect").addEventListener("change", (e) => {
+    ttsVoiceURI = e.target.value;
+    saveAll();
+  });
+
+  $("testVoiceBtn").addEventListener("click", async () => {
+    // ensure voices are available
+    ttsVoices = await getVoicesAsync();
+    populateVoiceDropdown();
+
+    const samples = {
+      en: "Hello. This is a voice test.",
+      es: "Hola. Esta es una prueba de voz.",
+      fr: "Bonjour. Ceci est un test de voix.",
+      hi: "नमस्ते। यह वॉइस टेस्ट है।",
+      sw: "Habari. Huu ni mtihani wa sauti.",
+      ar: "مرحباً. هذا اختبار للصوت."
+    };
+    speak(samples[uiLang] || samples.en);
+  });
 
   $("resetBtn").addEventListener("click", resetAll);
   $("nextBtn").addEventListener("click", goNext);
