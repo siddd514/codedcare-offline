@@ -1,10 +1,5 @@
 // CodedCare vNext: multi-module + voice + optional auto-translate + scoring engine
-// NOTE: Speech recognition availability depends on browser/device.
-// Auto-translate requires an online translation endpoint (optional).
 
-/* =======================
-   Storage + Settings
-   ======================= */
 const LS = {
   uiLang: "cc_ui_lang",
   moduleId: "cc_module_id",
@@ -26,9 +21,6 @@ let translateEndpoint = localStorage.getItem(LS.translateEndpoint) || "";
 let modules = [];
 let protocol = null;
 
-/* =======================
-   State
-   ======================= */
 const state = {
   history: [],
   currentQ: null,
@@ -40,18 +32,235 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 
-/* =======================
-   i18n helper
-   ======================= */
+const UI = {
+  en: {
+    module: "Module",
+    language: "Language",
+    readAloud: "Read Aloud",
+    voiceInput: "Voice Input",
+    settings: "Settings",
+    reset: "Reset",
+    back: "Back",
+    next: "Next",
+    repeat: "Repeat",
+    summary: "Summary",
+    copy: "Copy",
+    download: "Download .txt",
+    close: "Close",
+    save: "Save",
+    safetyTitle: "Safety note:",
+    safetyBody:
+      "This tool is for training/decision-support. It does not diagnose or replace clinical judgment. Do not enter identifying patient information.",
+    footer: "Offline after first load. Voice recognition depends on browser support.",
+    speechLang: "Speech input language (what YOU speak)",
+    autoTranslate: "Auto-translate speech into UI language (online only)",
+    endpoint: "Translation endpoint (optional)",
+    endpointHint:
+      "If endpoint is blank, auto-translate is disabled. Public translation servers may be unreliable and are not for sensitive info.",
+    ttsOn: "Read Aloud: On",
+    ttsOff: "Read Aloud: Off",
+    micOn: "Voice Input: On",
+    micOff: "Voice Input: Off"
+  },
+  es: {
+    module: "Módulo",
+    language: "Idioma",
+    readAloud: "Leer en voz alta",
+    voiceInput: "Entrada de voz",
+    settings: "Ajustes",
+    reset: "Reiniciar",
+    back: "Atrás",
+    next: "Siguiente",
+    repeat: "Repetir",
+    summary: "Resumen",
+    copy: "Copiar",
+    download: "Descargar .txt",
+    close: "Cerrar",
+    save: "Guardar",
+    safetyTitle: "Nota de seguridad:",
+    safetyBody:
+      "Esta herramienta es para entrenamiento/apoyo a decisiones. No diagnostica ni reemplaza el juicio clínico. No ingreses información identificable del paciente.",
+    footer: "Sin conexión después de la primera carga. El reconocimiento de voz depende del navegador.",
+    speechLang: "Idioma de entrada de voz (lo que TÚ hablas)",
+    autoTranslate: "Auto-traducir voz al idioma de la interfaz (solo en línea)",
+    endpoint: "Endpoint de traducción (opcional)",
+    endpointHint:
+      "Si está vacío, la auto-traducción se desactiva. Servidores públicos pueden ser poco confiables y no son para info sensible.",
+    ttsOn: "Leer: Activado",
+    ttsOff: "Leer: Desactivado",
+    micOn: "Voz: Activada",
+    micOff: "Voz: Desactivada"
+  },
+  fr: {
+    module: "Module",
+    language: "Langue",
+    readAloud: "Lecture audio",
+    voiceInput: "Entrée vocale",
+    settings: "Paramètres",
+    reset: "Réinitialiser",
+    back: "Retour",
+    next: "Suivant",
+    repeat: "Répéter",
+    summary: "Résumé",
+    copy: "Copier",
+    download: "Télécharger .txt",
+    close: "Fermer",
+    save: "Enregistrer",
+    safetyTitle: "Note de sécurité :",
+    safetyBody:
+      "Outil d’aide à la décision/formation. Ne pose pas de diagnostic et ne remplace pas le jugement clinique. Ne pas saisir d’informations identifiantes.",
+    footer: "Hors ligne après le premier chargement. La reconnaissance vocale dépend du navigateur.",
+    speechLang: "Langue de saisie vocale (ce que VOUS dites)",
+    autoTranslate: "Traduire automatiquement vers la langue UI (en ligne uniquement)",
+    endpoint: "Endpoint de traduction (optionnel)",
+    endpointHint:
+      "Si vide, la traduction auto est désactivée. Les services publics peuvent être instables et ne conviennent pas aux infos sensibles.",
+    ttsOn: "Lecture : Activée",
+    ttsOff: "Lecture : Désactivée",
+    micOn: "Voix : Activée",
+    micOff: "Voix : Désactivée"
+  },
+  hi: {
+    module: "मॉड्यूल",
+    language: "भाषा",
+    readAloud: "आवाज़ में पढ़ें",
+    voiceInput: "वॉइस इनपुट",
+    settings: "सेटिंग्स",
+    reset: "रीसेट",
+    back: "वापस",
+    next: "आगे",
+    repeat: "दोहराएँ",
+    summary: "सारांश",
+    copy: "कॉपी",
+    download: "डाउनलोड .txt",
+    close: "बंद करें",
+    save: "सेव",
+    safetyTitle: "सुरक्षा नोट:",
+    safetyBody:
+      "यह टूल प्रशिक्षण/निर्णय‑सहायता के लिए है। यह निदान नहीं करता और क्लिनिकल निर्णय का विकल्प नहीं है। पहचान योग्य जानकारी न डालें।",
+    footer: "पहली बार लोड होने के बाद ऑफ़लाइन। वॉइस रिकग्निशन ब्राउज़र पर निर्भर है।",
+    speechLang: "स्पीच इनपुट भाषा (आप क्या बोलते हैं)",
+    autoTranslate: "स्पीच को UI भाषा में ऑटो‑ट्रांसलेट (केवल ऑनलाइन)",
+    endpoint: "ट्रांसलेशन एंडपॉइंट (वैकल्पिक)",
+    endpointHint:
+      "अगर खाली है तो ऑटो‑ट्रांसलेट बंद रहेगा। पब्लिक सर्वर भरोसेमंद नहीं हो सकते और संवेदनशील जानकारी के लिए नहीं हैं।",
+    ttsOn: "पढ़ें: चालू",
+    ttsOff: "पढ़ें: बंद",
+    micOn: "वॉइस: चालू",
+    micOff: "वॉइस: बंद"
+  },
+  sw: {
+    module: "Moduli",
+    language: "Lugha",
+    readAloud: "Soma kwa sauti",
+    voiceInput: "Ingizo la sauti",
+    settings: "Mipangilio",
+    reset: "Weka upya",
+    back: "Rudi",
+    next: "Endelea",
+    repeat: "Rudia",
+    summary: "Muhtasari",
+    copy: "Nakili",
+    download: "Pakua .txt",
+    close: "Funga",
+    save: "Hifadhi",
+    safetyTitle: "Tahadhari ya usalama:",
+    safetyBody:
+      "Chombo hiki ni cha mafunzo/msaada wa maamuzi. Hakitoi utambuzi na hakibadilishi uamuzi wa kliniki. Usiingize taarifa zinazomtambulisha mgonjwa.",
+    footer: "Hufanya kazi bila mtandao baada ya kupakia mara ya kwanza. Utambuzi wa sauti hutegemea kivinjari.",
+    speechLang: "Lugha ya sauti (unachoongea)",
+    autoTranslate: "Tafsiri sauti kwenda lugha ya UI (mtandaoni tu)",
+    endpoint: "Anwani ya kutafsiri (si lazima)",
+    endpointHint:
+      "Ikiwa tupu, tafsiri ya moja kwa moja itazimwa. Huduma za umma zinaweza kutokua thabiti na si kwa taarifa nyeti.",
+    ttsOn: "Sauti: Washa",
+    ttsOff: "Sauti: Zima",
+    micOn: "Sauti‑ingizo: Washa",
+    micOff: "Sauti‑ingizo: Zima"
+  },
+  ar: {
+    module: "الوحدة",
+    language: "اللغة",
+    readAloud: "قراءة صوتية",
+    voiceInput: "إدخال صوتي",
+    settings: "الإعدادات",
+    reset: "إعادة ضبط",
+    back: "رجوع",
+    next: "التالي",
+    repeat: "إعادة",
+    summary: "الملخص",
+    copy: "نسخ",
+    download: "تنزيل .txt",
+    close: "إغلاق",
+    save: "حفظ",
+    safetyTitle: "ملاحظة أمان:",
+    safetyBody:
+      "هذه الأداة للتدريب/دعم القرار. لا تُشخّص ولا تستبدل الحكم السريري. لا تُدخل معلومات تعريفية عن المريض.",
+    footer: "تعمل دون إنترنت بعد أول تحميل. التعرف على الصوت يعتمد على المتصفح.",
+    speechLang: "لغة الإدخال الصوتي (ما تتحدث به)",
+    autoTranslate: "ترجمة الكلام تلقائياً إلى لغة الواجهة (عبر الإنترنت فقط)",
+    endpoint: "عنوان خدمة الترجمة (اختياري)",
+    endpointHint:
+      "إذا كان فارغاً فسيتم تعطيل الترجمة التلقائية. الخدمات العامة قد تكون غير مستقرة وغير مناسبة للمعلومات الحساسة.",
+    ttsOn: "القراءة: تشغيل",
+    ttsOff: "القراءة: إيقاف",
+    micOn: "الصوت: تشغيل",
+    micOff: "الصوت: إيقاف"
+  }
+};
+
+function ui(key){
+  return UI[uiLang]?.[key] ?? UI.en[key] ?? key;
+}
+
+function applyUiStrings(){
+  // Direction + language
+  document.documentElement.lang = uiLang;
+  const isRTL = uiLang === "ar";
+  document.documentElement.dir = isRTL ? "rtl" : "ltr";
+  document.body.classList.toggle("rtl", isRTL);
+
+  // Header pills
+  $("moduleLabel").textContent = ui("module");
+  $("uiLangLabel").textContent = ui("language");
+
+  // Buttons
+  $("settingsBtn").textContent = ui("settings");
+  $("resetBtn").textContent = ui("reset");
+  $("backBtn").textContent = ui("back");
+  $("nextBtn").textContent = ui("next");
+  $("repeatBtn").textContent = ui("repeat");
+
+  // Summary
+  $("summaryTitle").textContent = ui("summary");
+  $("copyBtn").textContent = ui("copy");
+  $("downloadBtn").textContent = ui("download");
+
+  // Safety note + footer
+  $("safetyTitle").textContent = ui("safetyTitle");
+  $("safetyBody").textContent = ui("safetyBody");
+  $("footerText").textContent = ui("footer");
+
+  // Modal labels
+  $("settingsTitle").textContent = ui("settings");
+  $("closeSettingsBtn").textContent = ui("close");
+  $("saveSettingsBtn").textContent = ui("save");
+  $("speechLangLbl").textContent = ui("speechLang");
+  $("autoTranslateLbl").lastChild.textContent = " " + ui("autoTranslate");
+  $("endpointLbl").textContent = ui("endpoint");
+  $("endpointHint").textContent = ui("endpointHint");
+
+  // Toggle buttons (stateful labels)
+  $("ttsBtn").textContent = ttsEnabled ? ui("ttsOn") : ui("ttsOff");
+  $("micBtn").textContent = micEnabled ? ui("micOn") : ui("micOff");
+}
+
 function t(obj) {
   if (!obj) return "";
   if (typeof obj === "string") return obj;
   return obj[uiLang] || obj["en"] || "";
 }
 
-/* =======================
-   Save
-   ======================= */
 function saveAll() {
   localStorage.setItem(LS.uiLang, uiLang);
   localStorage.setItem(LS.tts, JSON.stringify(ttsEnabled));
@@ -62,9 +271,6 @@ function saveAll() {
   localStorage.setItem(LS.answers, JSON.stringify(state.answers));
 }
 
-/* =======================
-   Fetch modules/protocol
-   ======================= */
 async function loadModules() {
   const res = await fetch("modules.json");
   modules = await res.json();
@@ -81,42 +287,41 @@ async function loadProtocolByModuleId(moduleId) {
   $("status").textContent = t(protocol.title);
 }
 
-/* =======================
-   Service Worker
-   ======================= */
 function initPWA() {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
   }
 }
 
-/* =======================
-   TTS
-   ======================= */
+/* TTS */
+function ttsLangCode(){
+  if (uiLang === "es") return "es-ES";
+  if (uiLang === "fr") return "fr-FR";
+  if (uiLang === "hi") return "hi-IN";
+  if (uiLang === "sw") return "sw-KE";
+  if (uiLang === "ar") return "ar-SA";
+  return "en-US";
+}
 function speak(text) {
   state.lastSpoken = text;
-
   if (!ttsEnabled) return;
   if (!("speechSynthesis" in window)) return;
 
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = uiLang === "es" ? "es-ES" : "en-US";
+    u.lang = ttsLangCode();
     u.rate = 1.0;
     window.speechSynthesis.speak(u);
   } catch {}
 }
 
-/* =======================
-   Speech recognition
-   ======================= */
+/* Speech recognition */
 let recognition = null;
 
 function setupRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
-
   const r = new SR();
   r.interimResults = false;
   r.maxAlternatives = 1;
@@ -124,13 +329,9 @@ function setupRecognition() {
 }
 
 function normalize(str) {
-  return (str || "")
-    .toLowerCase()
-    .trim()
-    .replace(/[.,!?]/g, "");
+  return (str || "").toLowerCase().trim().replace(/[.,!?]/g, "");
 }
 
-// For translation APIs we typically need ISO 639-1 codes
 function isoLangFromBCP47(bcp47) {
   const s = (bcp47 || "").toLowerCase();
   if (s.startsWith("en")) return "en";
@@ -149,17 +350,12 @@ async function translateText(text, sourceBCP47, targetUiLang) {
 
   try {
     const source = isoLangFromBCP47(sourceBCP47);
-    const target = targetUiLang; // uiLang is "en" or "es" here
+    const target = targetUiLang;
 
     const res = await fetch(translateEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        q: text,
-        source,
-        target,
-        format: "text"
-      })
+      body: JSON.stringify({ q: text, source, target, format: "text" })
     });
 
     if (!res.ok) return text;
@@ -172,11 +368,8 @@ async function translateText(text, sourceBCP47, targetUiLang) {
 
 function showHeard(text) {
   const el = $("heard");
-  if (!text) {
-    el.classList.add("hidden");
-    return;
-  }
-  el.textContent = `Heard: ${text}`;
+  if (!text) { el.classList.add("hidden"); return; }
+  el.textContent = (uiLang === "ar") ? `تم السماع: ${text}` : `Heard: ${text}`;
   el.classList.remove("hidden");
 }
 
@@ -188,13 +381,12 @@ function startListening(qid) {
     alert("Speech recognition is not supported in this browser.");
     micEnabled = false;
     saveAll();
-    $("micBtn").textContent = "Voice Input: Off";
+    applyUiStrings();
     return;
   }
 
   recognition.lang = speechLang;
 
-  // Stop any previous session
   try { recognition.abort(); } catch {}
 
   recognition.onresult = async (event) => {
@@ -212,37 +404,28 @@ function startListening(qid) {
   try { recognition.start(); } catch {}
 }
 
-/* =======================
-   Protocol engine helpers
-   ======================= */
+/* Protocol helpers */
 function getQuestion(qid) {
   return protocol?.questions?.[qid] || null;
 }
-
 function stepLabel() {
-  // Not perfect for branching, but useful
-  const step = state.history.length + 1;
-  return `Step ${step}`;
+  return `Step ${state.history.length + 1}`;
 }
-
 function enableNextIfValid(qid) {
   const q = getQuestion(qid);
   if (!q) return;
 
   const ans = state.answers[qid];
-
   let valid = false;
 
   if (q.type === "single") valid = !!ans;
   else if (q.type === "multi") {
     const arr = Array.isArray(ans) ? ans : [];
     valid = (q.required === false) ? true : arr.length > 0;
-  }
-  else if (q.type === "number") {
+  } else if (q.type === "number") {
     if (q.required === false && (ans === "" || ans === null || ans === undefined)) valid = true;
     else valid = typeof ans === "number" && !Number.isNaN(ans);
-  }
-  else if (q.type === "text") {
+  } else if (q.type === "text") {
     if (q.required === false) valid = true;
     else valid = typeof ans === "string" && ans.trim().length > 0;
   }
@@ -259,38 +442,20 @@ function nextQidFrom(qid) {
     const opt = q.options.find(o => o.value === ans);
     return opt?.next || null;
   }
-
-  // multi/number/text use q.next
   return q.next || null;
 }
 
-/* =======================
-   Decision + scoring
-   ======================= */
 function evalCond(cond) {
   const val = state.answers[cond.q];
 
   if (cond.equals !== undefined) return val === cond.equals;
-
-  if (cond.includes !== undefined) {
-    if (!Array.isArray(val)) return false;
-    return val.includes(cond.includes);
-  }
+  if (cond.includes !== undefined) return Array.isArray(val) && val.includes(cond.includes);
 
   if (cond.gte !== undefined) return typeof val === "number" && val >= cond.gte;
-  if (cond.gt !== undefined) return typeof val === "number" && val > cond.gt;
-  if (cond.lte !== undefined) return typeof val === "number" && val <= cond.lte;
   if (cond.lt !== undefined) return typeof val === "number" && val < cond.lt;
 
-  // For multi-select counts
-  if (cond.countGte !== undefined) {
-    const c = Array.isArray(val) ? val.length : 0;
-    return c >= cond.countGte;
-  }
-  if (cond.countLt !== undefined) {
-    const c = Array.isArray(val) ? val.length : 0;
-    return c < cond.countLt;
-  }
+  if (cond.countGte !== undefined) return (Array.isArray(val) ? val.length : 0) >= cond.countGte;
+  if (cond.countLt !== undefined) return (Array.isArray(val) ? val.length : 0) < cond.countLt;
 
   return false;
 }
@@ -299,7 +464,6 @@ function computeScoreAndOutcome() {
   if (!protocol.scoring?.enabled) return null;
 
   let score = 0;
-
   for (const rule of protocol.scoring.rules || []) {
     const ok = (rule.when || []).every(evalCond);
     if (ok) score += (rule.add || 0);
@@ -307,7 +471,6 @@ function computeScoreAndOutcome() {
 
   state.score = score;
 
-  // map score to outcome
   const map = protocol.scoring.outcomeByScore || [];
   for (const b of map) {
     if (score >= b.min && score <= b.max) {
@@ -315,8 +478,6 @@ function computeScoreAndOutcome() {
       return { score, outcomeId: b.outcome };
     }
   }
-
-  // fallback
   state.outcomeId = map?.[0]?.outcome || null;
   return { score, outcomeId: state.outcomeId };
 }
@@ -330,9 +491,7 @@ function computeRuleOutcome() {
   return protocol.decision?.defaultOutcome || null;
 }
 
-/* =======================
-   Render
-   ======================= */
+/* Render */
 function renderQuestion(qid) {
   state.currentQ = qid;
 
@@ -340,7 +499,6 @@ function renderQuestion(qid) {
   if (!q) return renderEnd();
 
   $("summaryCard").classList.add("hidden");
-
   $("status").textContent = t(protocol.title);
   $("step").textContent = stepLabel();
 
@@ -359,7 +517,6 @@ function renderQuestion(qid) {
     screen.appendChild(help);
   }
 
-  // Render by type
   if (q.type === "single" || q.type === "multi") {
     const list = document.createElement("div");
     list.className = "option-list";
@@ -401,11 +558,8 @@ function renderQuestion(qid) {
         state.answers[qid] = e.target.value;
       } else {
         const curr = Array.isArray(state.answers[qid]) ? state.answers[qid] : [];
-        if (e.target.checked) {
-          state.answers[qid] = Array.from(new Set([...curr, e.target.value]));
-        } else {
-          state.answers[qid] = curr.filter(x => x !== e.target.value);
-        }
+        if (e.target.checked) state.answers[qid] = Array.from(new Set([...curr, e.target.value]));
+        else state.answers[qid] = curr.filter(x => x !== e.target.value);
       }
       saveAll();
       enableNextIfValid(qid);
@@ -418,18 +572,12 @@ function renderQuestion(qid) {
     input.className = "textin";
     if (q.min !== undefined) input.min = String(q.min);
     if (q.max !== undefined) input.max = String(q.max);
-    input.placeholder = q.unit ? `(${q.unit})` : "";
     const existing = state.answers[qid];
     if (typeof existing === "number") input.value = String(existing);
 
     input.addEventListener("input", () => {
       const raw = input.value;
-      if (raw === "") {
-        state.answers[qid] = "";
-      } else {
-        const num = Number(raw);
-        state.answers[qid] = Number.isNaN(num) ? "" : num;
-      }
+      state.answers[qid] = raw === "" ? "" : Number(raw);
       saveAll();
       enableNextIfValid(qid);
     });
@@ -454,17 +602,13 @@ function renderQuestion(qid) {
     screen.appendChild(input);
   }
 
-  // Buttons
   $("backBtn").disabled = state.history.length === 0;
   enableNextIfValid(qid);
 
-  // Speak question + options
+  // Speak question
   const spokenParts = [t(q.text)];
   if (q.type === "single" || q.type === "multi") {
-    const opts = q.options.map((o, i) => {
-      const n = i + 1;
-      return uiLang === "es" ? `Opción ${n}: ${t(o.label)}` : `Option ${n}: ${t(o.label)}`;
-    }).join(". ");
+    const opts = q.options.map((o, i) => `${i + 1}: ${t(o.label)}`).join(". ");
     spokenParts.push(opts);
   }
   speak(spokenParts.join(". "));
@@ -476,9 +620,7 @@ function renderEnd() {
   $("step").textContent = "Complete";
   $("nextBtn").disabled = true;
 
-  // Determine outcome
   let outcomeId = null;
-
   const scoreResult = computeScoreAndOutcome();
   if (scoreResult?.outcomeId) outcomeId = scoreResult.outcomeId;
   else outcomeId = computeRuleOutcome();
@@ -516,11 +658,9 @@ function renderEnd() {
 
   screen.appendChild(p);
 
-  // Summary
   const lines = [];
   lines.push(`CodedCare Summary (offline)`);
   lines.push(`Module: ${t(protocol.title)}`);
-
   if (protocol.scoring?.enabled) lines.push(`Score: ${state.score}`);
   lines.push(`Outcome: ${t(outcome.label)}`);
   lines.push(`--- Answers ---`);
@@ -534,19 +674,12 @@ function renderEnd() {
       lines.push(`- ${t(q.text)} -> ${opt ? t(opt.label) : val}`);
     } else if (q.type === "multi") {
       const arr = Array.isArray(val) ? val : [];
-      const labels = arr.map(v => {
-        const opt = q.options.find(o => o.value === v);
-        return opt ? t(opt.label) : v;
-      });
+      const labels = arr.map(v => (q.options.find(o => o.value === v) ? t(q.options.find(o => o.value === v).label) : v));
       lines.push(`- ${t(q.text)} -> ${labels.join(", ") || "(none)"}`);
     } else {
       lines.push(`- ${t(q.text)} -> ${String(val)}`);
     }
   }
-
-  lines.push(`--- Notes ---`);
-  lines.push(`Training/decision-support only. Do not include identifying patient info.`);
-  lines.push(`Voice + auto-translate depend on browser and connectivity.`);
 
   $("summaryText").textContent = lines.join("\n");
   $("summaryCard").classList.remove("hidden");
@@ -554,70 +687,45 @@ function renderEnd() {
   speak(`${t(outcome.label)}. ${t(outcome.text)}`);
 }
 
-/* =======================
-   Voice command handling
-   ======================= */
+/* Voice commands */
 function handleSpoken(qid, spoken) {
   const q = getQuestion(qid);
   if (!q) return;
 
-  // Commands
-  const cmdNext = ["next", "continue", "siguiente", "continuar"];
-  const cmdBack = ["back", "previous", "atrás", "atras"];
-  const cmdRepeat = ["repeat", "again", "repetir", "otra vez"];
-  const cmdReset = ["reset", "restart", "reiniciar"];
+  const cmdNext = ["next", "continue", "siguiente", "suivant", "आगे", "endelea", "التالي"];
+  const cmdBack = ["back", "previous", "atrás", "retour", "वापस", "rudi", "رجوع"];
+  const cmdRepeat = ["repeat", "again", "repetir", "répéter", "दोहराएँ", "rudia", "إعادة"];
+  const cmdReset = ["reset", "restart", "reiniciar", "réinitialiser", "रीसेट", "weka upya", "إعادة ضبط"];
 
-  if (cmdNext.some(w => spoken === w || spoken.includes(w))) return goNext();
-  if (cmdBack.some(w => spoken === w || spoken.includes(w))) return goBack();
-  if (cmdRepeat.some(w => spoken === w || spoken.includes(w))) return speak(state.lastSpoken || "");
-  if (cmdReset.some(w => spoken === w || spoken.includes(w))) return resetAll();
+  if (cmdNext.some(w => spoken.includes(normalize(w)))) return goNext();
+  if (cmdBack.some(w => spoken.includes(normalize(w)))) return goBack();
+  if (cmdRepeat.some(w => spoken.includes(normalize(w)))) return speak(state.lastSpoken || "");
+  if (cmdReset.some(w => spoken.includes(normalize(w)))) return resetAll();
 
-  // If single/multi: try map yes/no and option numbers and labels
   if (q.type === "single" || q.type === "multi") {
-    // option number: "1", "2"
     const digit = spoken.match(/(\d+)/);
     if (digit) {
       const idx = parseInt(digit[1], 10) - 1;
-      if (q.options[idx]) {
-        applyOption(qid, q, q.options[idx].value);
-        return;
-      }
+      if (q.options[idx]) return applyOption(qid, q, q.options[idx].value);
     }
 
-    // yes/no shortcuts when option values are yes/no
-    const yesWords = ["yes", "yeah", "yep", "si", "sí"];
-    const noWords = ["no", "nope"];
-    if (yesWords.some(w => spoken === w || spoken.includes(w))) {
-      const opt = q.options.find(o => String(o.value).toLowerCase() === "yes");
-      if (opt) return applyOption(qid, q, opt.value);
-    }
-    if (noWords.some(w => spoken === w || spoken.includes(w))) {
-      const opt = q.options.find(o => String(o.value).toLowerCase() === "no");
-      if (opt) return applyOption(qid, q, opt.value);
-    }
-
-    // label match
     const matched = q.options.find(o => normalize(t(o.label)) === spoken);
     if (matched) return applyOption(qid, q, matched.value);
   }
 }
 
 function applyOption(qid, q, value) {
-  if (q.type === "single") {
-    state.answers[qid] = value;
-  } else {
+  if (q.type === "single") state.answers[qid] = value;
+  else {
     const curr = Array.isArray(state.answers[qid]) ? state.answers[qid] : [];
-    if (curr.includes(value)) state.answers[qid] = curr.filter(x => x !== value);
-    else state.answers[qid] = [...curr, value];
+    state.answers[qid] = curr.includes(value) ? curr.filter(x => x !== value) : [...curr, value];
   }
   saveAll();
   renderQuestion(qid);
   enableNextIfValid(qid);
 }
 
-/* =======================
-   Navigation
-   ======================= */
+/* Navigation */
 function goNext() {
   if (!state.currentQ) return renderQuestion(protocol.start);
 
@@ -650,7 +758,6 @@ function resetAll() {
 function copySummary() {
   navigator.clipboard.writeText($("summaryText").textContent || "");
 }
-
 function downloadSummary() {
   const text = $("summaryText").textContent || "";
   const blob = new Blob([text], { type: "text/plain" });
@@ -664,21 +771,16 @@ function downloadSummary() {
   URL.revokeObjectURL(url);
 }
 
-/* =======================
-   UI: Settings modal
-   ======================= */
+/* Modal */
 function openSettings() {
   $("speechLangSelect").value = speechLang;
   $("autoTranslateToggle").checked = autoTranslate;
   $("translateEndpointInput").value = translateEndpoint;
-
   $("modalOverlay").classList.remove("hidden");
 }
-
 function closeSettings() {
   $("modalOverlay").classList.add("hidden");
 }
-
 function saveSettings() {
   speechLang = $("speechLangSelect").value;
   autoTranslate = $("autoTranslateToggle").checked;
@@ -687,9 +789,7 @@ function saveSettings() {
   closeSettings();
 }
 
-/* =======================
-   Init
-   ======================= */
+/* Modules */
 function populateModulesDropdown() {
   const sel = $("moduleSelect");
   sel.innerHTML = "";
@@ -705,31 +805,26 @@ function populateModulesDropdown() {
 }
 
 async function switchModule(moduleId) {
-  // Clear per-module state to avoid mixing answers across tools
   state.history = [];
   state.currentQ = null;
   state.answers = {};
   localStorage.removeItem(LS.answers);
-
   await loadProtocolByModuleId(moduleId);
   renderQuestion(protocol.start);
 }
 
 async function init() {
   $("uiLangSelect").value = uiLang;
-  $("ttsBtn").textContent = `Read Aloud: ${ttsEnabled ? "On" : "Off"}`;
-  $("micBtn").textContent = `Voice Input: ${micEnabled ? "On" : "Off"}`;
 
   await loadModules();
   populateModulesDropdown();
 
-  // Load initial protocol
   const moduleId = $("moduleSelect").value;
   await loadProtocolByModuleId(moduleId);
 
   initPWA();
+  applyUiStrings();
 
-  // Event listeners
   $("moduleSelect").addEventListener("change", async (e) => {
     await switchModule(e.target.value);
   });
@@ -737,25 +832,24 @@ async function init() {
   $("uiLangSelect").addEventListener("change", async (e) => {
     uiLang = e.target.value;
     saveAll();
-    populateModulesDropdown(); // module titles change language
+    applyUiStrings();
+    populateModulesDropdown();
     renderQuestion(state.currentQ && state.currentQ !== "end" ? state.currentQ : protocol.start);
   });
 
   $("ttsBtn").addEventListener("click", () => {
     ttsEnabled = !ttsEnabled;
     saveAll();
-    $("ttsBtn").textContent = `Read Aloud: ${ttsEnabled ? "On" : "Off"}`;
+    applyUiStrings();
     if (state.currentQ && state.currentQ !== "end") renderQuestion(state.currentQ);
   });
 
   $("micBtn").addEventListener("click", () => {
     micEnabled = !micEnabled;
     saveAll();
-    $("micBtn").textContent = `Voice Input: ${micEnabled ? "On" : "Off"}`;
+    applyUiStrings();
     if (micEnabled && state.currentQ && state.currentQ !== "end") startListening(state.currentQ);
-    else {
-      try { recognition?.abort(); } catch {}
-    }
+    else { try { recognition?.abort(); } catch {} }
   });
 
   $("settingsBtn").addEventListener("click", openSettings);
@@ -770,7 +864,6 @@ async function init() {
   $("copyBtn").addEventListener("click", copySummary);
   $("downloadBtn").addEventListener("click", downloadSummary);
 
-  // Start
   renderQuestion(protocol.start);
 }
 
