@@ -1,0 +1,99 @@
+{
+  "id": "resp_triage_v1",
+  "title": {
+    "en": "Module 1: Cough / Trouble Breathing (Triage)",
+    "es": "Módulo 1: Tos / Dificultad para respirar (Triaje)"
+  },
+  "start": "q1",
+  "questions": {
+    "q1": {
+      "type": "single",
+      "text": {
+        "en": "Select age group:",
+        "es": "Selecciona el grupo de edad:"
+      },
+      "help": {
+        "en": "This is a starter module. Replace questions with your chosen published protocol + advisor review.",
+        "es": "Este es un módulo inicial. Reemplaza preguntas con un protocolo publicado + revisión clínica."
+      },
+      "options": [
+        { "value": "u5", "label": { "en": "Child under 5", "es": "Niño/a menor de 5" }, "next": "q2" },
+        { "value": "5plus", "label": { "en": "Age 5+", "es": "Edad 5+" }, "next": "q2" }
+      ]
+    },
+    "q2": {
+      "type": "single",
+      "text": {
+        "en": "Is there ANY immediate danger sign?",
+        "es": "¿Hay ALGUNA señal de peligro inmediata?"
+      },
+      "help": {
+        "en": "Examples (general): severe difficulty breathing, bluish lips/face, unconsciousness, confusion, or inability to drink. Use your protocol’s exact list.",
+        "es": "Ejemplos (general): dificultad respiratoria grave, labios/cara azulados, inconsciencia, confusión o incapacidad para beber. Usa la lista exacta del protocolo."
+      },
+      "options": [
+        { "value": "yes", "label": { "en": "Yes", "es": "Sí" }, "next": "end" },
+        { "value": "no", "label": { "en": "No", "es": "No" }, "next": "q3" }
+      ]
+    },
+    "q3": {
+      "type": "single",
+      "text": {
+        "en": "Is oxygen level low per your device/protocol OR is breathing getting worse quickly?",
+        "es": "¿El oxígeno está bajo según tu dispositivo/protocolo O la respiración empeora rápidamente?"
+      },
+      "options": [
+        { "value": "yes", "label": { "en": "Yes", "es": "Sí" }, "next": "end" },
+        { "value": "no", "label": { "en": "No", "es": "No" }, "next": "q4" }
+      ]
+    },
+    "q4": {
+      "type": "single",
+      "text": {
+        "en": "Does the person have wheezing or known asthma history?",
+        "es": "¿La persona tiene sibilancias o antecedente de asma?"
+      },
+      "help": {
+        "en": "This is not a diagnosis. This helps structure questions for the supervising clinician.",
+        "es": "Esto no es un diagnóstico. Ayuda a estructurar preguntas para el clínico supervisor."
+      },
+      "options": [
+        { "value": "yes", "label": { "en": "Yes", "es": "Sí" }, "next": "end" },
+        { "value": "no", "label": { "en": "No", "es": "No" }, "next": "end" }
+      ]
+    }
+  },
+  "outcomes": {
+    "urgent": {
+      "label": { "en": "Urgent referral / escalation", "es": "Referencia urgente / escalamiento" },
+      "badge": "danger",
+      "text": {
+        "en": "Protocol suggests urgent escalation. Document findings and seek clinician confirmation immediately.",
+        "es": "El protocolo sugiere escalamiento urgente. Documenta hallazgos y busca confirmación clínica de inmediato."
+      }
+    },
+    "same_day": {
+      "label": { "en": "Same-day evaluation", "es": "Evaluación el mismo día" },
+      "badge": "danger",
+      "text": {
+        "en": "Protocol suggests same-day evaluation. Provide the summary to a supervising clinician.",
+        "es": "El protocolo sugiere evaluación el mismo día. Proporciona el resumen a un clínico supervisor."
+      }
+    },
+    "routine": {
+      "label": { "en": "Routine / follow local protocol", "es": "Rutina / seguir protocolo local" },
+      "badge": "ok",
+      "text": {
+        "en": "No immediate red flags selected. Follow local protocol and give clear follow-up instructions.",
+        "es": "No se seleccionaron señales de alarma inmediatas. Sigue el protocolo local y da instrucciones de seguimiento."
+      }
+    }
+  },
+  "decision": {
+    "rules": [
+      { "if": [{ "q": "q2", "equals": "yes" }], "outcome": "urgent" },
+      { "if": [{ "q": "q2", "equals": "no" }, { "q": "q3", "equals": "yes" }], "outcome": "same_day" }
+    ],
+    "defaultOutcome": "routine"
+  }
+}

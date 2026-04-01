@@ -1,0 +1,9 @@
+{
+  "name": "CodedCare Offline",
+  "short_name": "CodedCare",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1b2b",
+  "theme_color": "#0b1b2b",
+  "icons": []
+}

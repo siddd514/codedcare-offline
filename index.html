@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CodedCare (Offline)</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b1b2b" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">CC</div>
+      <div>
+        <h1>CodedCare</h1>
+        <p class="sub">Offline protocol navigator (training/decision-support)</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <select id="langSelect" aria-label="Language">
+        <option value="en">English</option>
+        <option value="es">Español (demo)</option>
+      </select>
+      <button id="resetBtn" class="ghost">Reset</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card warning">
+      <strong>Safety note:</strong>
+      This tool is for <strong>training/decision-support</strong> using published protocols.
+      It does <strong>not</strong> diagnose or replace clinical judgment.
+      Do not enter identifying patient information.
+    </section>
+
+    <section id="app" class="card">
+      <div id="status" class="status"></div>
+
+      <div id="screen"></div>
+
+      <div class="actions">
+        <button id="backBtn" class="ghost" disabled>Back</button>
+        <button id="nextBtn" disabled>Next</button>
+      </div>
+    </section>
+
+    <section id="summaryCard" class="card hidden">
+      <h2>Summary</h2>
+      <pre id="summaryText" class="summary"></pre>
+      <div class="actions">
+        <button id="copyBtn" class="ghost">Copy</button>
+        <button id="downloadBtn" class="ghost">Download .txt</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Runs offline after first load. Answers are stored locally on this device.</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
