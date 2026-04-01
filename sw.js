@@ -1,5 +1,6 @@
-const CACHE_NAME = "codedcare-offline-v1";
+const CACHE_NAME = "codedcare-offline-v2";
 const ASSETS = [
+  "./",
   "./index.html",
   "./style.css",
   "./app.js",

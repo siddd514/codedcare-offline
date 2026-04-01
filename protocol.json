@@ -13,8 +13,8 @@
         "es": "Selecciona el grupo de edad:"
       },
       "help": {
-        "en": "This is a starter module. Replace questions with your chosen published protocol + advisor review.",
-        "es": "Este es un módulo inicial. Reemplaza preguntas con un protocolo publicado + revisión clínica."
+        "en": "Starter module. Replace content with a published protocol + clinical advisor review.",
+        "es": "Módulo inicial. Reemplaza el contenido con un protocolo publicado + revisión clínica."
       },
       "options": [
         { "value": "u5", "label": { "en": "Child under 5", "es": "Niño/a menor de 5" }, "next": "q2" },
@@ -28,8 +28,8 @@
         "es": "¿Hay ALGUNA señal de peligro inmediata?"
       },
       "help": {
-        "en": "Examples (general): severe difficulty breathing, bluish lips/face, unconsciousness, confusion, or inability to drink. Use your protocol’s exact list.",
-        "es": "Ejemplos (general): dificultad respiratoria grave, labios/cara azulados, inconsciencia, confusión o incapacidad para beber. Usa la lista exacta del protocolo."
+        "en": "General examples: severe trouble breathing, bluish lips/face, unconsciousness/confusion, or inability to drink. Use your protocol’s exact list.",
+        "es": "Ejemplos generales: dificultad respiratoria grave, labios/cara azulados, inconsciencia/confusión o incapacidad para beber. Usa la lista exacta del protocolo."
       },
       "options": [
         { "value": "yes", "label": { "en": "Yes", "es": "Sí" }, "next": "end" },
@@ -54,8 +54,8 @@
         "es": "¿La persona tiene sibilancias o antecedente de asma?"
       },
       "help": {
-        "en": "This is not a diagnosis. This helps structure questions for the supervising clinician.",
-        "es": "Esto no es un diagnóstico. Ayuda a estructurar preguntas para el clínico supervisor."
+        "en": "Not a diagnosis. This helps structure questions for a supervising clinician.",
+        "es": "No es un diagnóstico. Esto ayuda a estructurar preguntas para un clínico supervisor."
       },
       "options": [
         { "value": "yes", "label": { "en": "Yes", "es": "Sí" }, "next": "end" },
