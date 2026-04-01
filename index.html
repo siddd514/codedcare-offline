@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CodedCare (Offline)</title>
-
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0b1b2b" />
   <link rel="stylesheet" href="style.css" />
@@ -16,19 +15,21 @@
       <div class="logo">CC</div>
       <div>
         <h1>CodedCare</h1>
-        <p class="sub">Offline protocol navigator (training/decision-support)</p>
+        <p class="sub">Offline protocol navigator + clinical scores (training/decision-support)</p>
       </div>
     </div>
 
     <div class="header-actions">
-      <select id="langSelect" aria-label="Language">
+      <select id="moduleSelect" aria-label="Module"></select>
+
+      <select id="uiLangSelect" aria-label="UI Language">
         <option value="en">English</option>
-        <option value="es">Español (demo)</option>
+        <option value="es">Español</option>
       </select>
 
       <button id="ttsBtn" class="ghost">Read Aloud: Off</button>
-      <button id="micBtn" class="ghost">Voice Select: Off</button>
-
+      <button id="micBtn" class="ghost">Voice Input: Off</button>
+      <button id="settingsBtn" class="ghost">Settings</button>
       <button id="resetBtn" class="ghost">Reset</button>
     </div>
   </header>
@@ -36,17 +37,22 @@
   <main>
     <section class="card warning">
       <strong>Safety note:</strong>
-      This tool is for <strong>training/decision-support</strong> using published protocols.
-      It does <strong>not</strong> diagnose or replace clinical judgment.
-      Do not enter identifying patient information.
+      This tool is for <strong>training/decision-support</strong>. It does <strong>not</strong> diagnose or replace clinical judgment.
+      Do not enter identifying patient information. If you enable auto-translate, do not speak sensitive details.
     </section>
 
     <section id="app" class="card">
-      <div id="status" class="status"></div>
+      <div class="topline">
+        <div id="status" class="status"></div>
+        <div id="step" class="step"></div>
+      </div>
+
+      <div id="heard" class="heard hidden"></div>
       <div id="screen"></div>
 
       <div class="actions">
         <button id="backBtn" class="ghost" disabled>Back</button>
+        <button id="repeatBtn" class="ghost">Repeat</button>
         <button id="nextBtn" disabled>Next</button>
       </div>
     </section>
@@ -61,8 +67,47 @@
     </section>
   </main>
 
+  <!-- Settings modal -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal card">
+      <div class="modal-head">
+        <h2>Settings</h2>
+        <button id="closeSettingsBtn" class="ghost">Close</button>
+      </div>
+
+      <div class="form">
+        <label class="lbl">Speech input language (what YOU speak)</label>
+        <select id="speechLangSelect">
+          <option value="en-US">English (US)</option>
+          <option value="es-ES">Spanish (ES)</option>
+          <option value="es-MX">Spanish (MX)</option>
+          <option value="fr-FR">French</option>
+          <option value="hi-IN">Hindi</option>
+          <option value="sw-KE">Swahili (Kenya)</option>
+          <option value="ar-SA">Arabic</option>
+        </select>
+
+        <label class="lbl row">
+          <input id="autoTranslateToggle" type="checkbox" />
+          Auto-translate speech into UI language (online only)
+        </label>
+
+        <label class="lbl">Translation endpoint (optional)</label>
+        <input id="translateEndpointInput" class="textin" placeholder="Example: https://libretranslate.de/translate" />
+
+        <p class="hint">
+          If endpoint is blank, auto-translate is disabled. Public translation servers may be unreliable and are not for sensitive info.
+        </p>
+
+        <div class="actions">
+          <button id="saveSettingsBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer>
-    <small>Runs offline after first load. Answers are stored locally on this device.</small>
+    <small>Offline after first load. Content is stored locally. Voice recognition depends on browser support.</small>
   </footer>
 
   <script src="app.js"></script>

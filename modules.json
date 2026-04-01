@@ -1,0 +1,12 @@
+[
+  {
+    "id": "resp_triage_v1",
+    "file": "protocols/resp_triage_v1.json",
+    "title": { "en": "Cough / Trouble Breathing (Triage)", "es": "Tos / Dificultad para respirar (Triaje)" }
+  },
+  {
+    "id": "heart_score_v1",
+    "file": "protocols/heart_score_v1.json",
+    "title": { "en": "Chest Pain Risk Tool (HEART Score - Training)", "es": "Herramienta de riesgo (HEART - Entrenamiento)" }
+  }
+]

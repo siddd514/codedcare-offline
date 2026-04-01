@@ -1,0 +1,82 @@
+{
+  "id": "resp_triage_v1",
+  "title": {
+    "en": "Cough / Trouble Breathing (Triage)",
+    "es": "Tos / Dificultad para respirar (Triaje)"
+  },
+  "start": "q1",
+  "questions": {
+    "q1": {
+      "type": "single",
+      "text": { "en": "Select age group:", "es": "Selecciona el grupo de edad:" },
+      "options": [
+        { "value": "u5", "label": { "en": "Child under 5", "es": "Niño/a menor de 5" }, "next": "q2" },
+        { "value": "5plus", "label": { "en": "Age 5+", "es": "Edad 5+" }, "next": "q2" }
+      ]
+    },
+    "q2": {
+      "type": "single",
+      "text": { "en": "Any immediate danger sign?", "es": "¿Alguna señal de peligro inmediata?" },
+      "help": {
+        "en": "Use your chosen published protocol’s exact danger sign list.",
+        "es": "Usa la lista exacta de señales de peligro del protocolo publicado."
+      },
+      "options": [
+        { "value": "yes", "label": { "en": "Yes", "es": "Sí" }, "next": "end" },
+        { "value": "no", "label": { "en": "No", "es": "No" }, "next": "q3" }
+      ]
+    },
+    "q3": {
+      "type": "single",
+      "text": {
+        "en": "Low oxygen per your device/protocol OR rapidly worsening breathing?",
+        "es": "¿Oxígeno bajo según tu dispositivo/protocolo O empeoramiento rápido?"
+      },
+      "options": [
+        { "value": "yes", "label": { "en": "Yes", "es": "Sí" }, "next": "end" },
+        { "value": "no", "label": { "en": "No", "es": "No" }, "next": "q4" }
+      ]
+    },
+    "q4": {
+      "type": "single",
+      "text": { "en": "Wheezing or known asthma history?", "es": "¿Sibilancias o antecedente de asma?" },
+      "options": [
+        { "value": "yes", "label": { "en": "Yes", "es": "Sí" }, "next": "end" },
+        { "value": "no", "label": { "en": "No", "es": "No" }, "next": "end" }
+      ]
+    }
+  },
+  "outcomes": {
+    "urgent": {
+      "label": { "en": "Urgent escalation", "es": "Escalamiento urgente" },
+      "badge": "danger",
+      "text": {
+        "en": "Red flags selected. Escalate per local protocol and seek clinician confirmation.",
+        "es": "Se seleccionaron señales de alarma. Escala según protocolo local y busca confirmación clínica."
+      }
+    },
+    "same_day": {
+      "label": { "en": "Same-day evaluation", "es": "Evaluación el mismo día" },
+      "badge": "neutral",
+      "text": {
+        "en": "Consider same-day evaluation per protocol and provide a structured summary.",
+        "es": "Considera evaluación el mismo día según protocolo y proporciona un resumen estructurado."
+      }
+    },
+    "routine": {
+      "label": { "en": "Routine / follow protocol", "es": "Rutina / seguir protocolo" },
+      "badge": "ok",
+      "text": {
+        "en": "No immediate red flags selected. Follow local protocol and provide clear follow-up instructions.",
+        "es": "No se seleccionaron señales inmediatas. Sigue protocolo local e indica seguimiento."
+      }
+    }
+  },
+  "decision": {
+    "rules": [
+      { "if": [{ "q": "q2", "equals": "yes" }], "outcome": "urgent" },
+      { "if": [{ "q": "q2", "equals": "no" }, { "q": "q3", "equals": "yes" }], "outcome": "same_day" }
+    ],
+    "defaultOutcome": "routine"
+  }
+}

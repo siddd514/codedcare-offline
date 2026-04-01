@@ -1,0 +1,129 @@
+{
+  "id": "heart_score_v1",
+  "title": {
+    "en": "Chest Pain Risk Tool (HEART Score - Training)",
+    "es": "Herramienta de riesgo (HEART - Entrenamiento)"
+  },
+  "start": "q1",
+  "questions": {
+    "q1": {
+      "type": "single",
+      "text": { "en": "History (clinician assessment):", "es": "Historia (evaluación clínica):" },
+      "help": { "en": "Choose the category used in your setting.", "es": "Elige la categoría usada en tu entorno." },
+      "options": [
+        { "value": "slight", "label": { "en": "Slightly suspicious", "es": "Levemente sugestiva" }, "next": "q2" },
+        { "value": "moderate", "label": { "en": "Moderately suspicious", "es": "Moderadamente sugestiva" }, "next": "q2" },
+        { "value": "high", "label": { "en": "Highly suspicious", "es": "Altamente sugestiva" }, "next": "q2" }
+      ]
+    },
+    "q2": {
+      "type": "single",
+      "text": { "en": "ECG category:", "es": "Categoría de ECG:" },
+      "options": [
+        { "value": "normal", "label": { "en": "Normal", "es": "Normal" }, "next": "q3" },
+        { "value": "nonspecific", "label": { "en": "Nonspecific changes", "es": "Cambios inespecíficos" }, "next": "q3" },
+        { "value": "significant", "label": { "en": "Significant ST deviation (per clinician)", "es": "Desviación ST significativa (según clínico)" }, "next": "q3" }
+      ]
+    },
+    "q3": {
+      "type": "number",
+      "text": { "en": "Age (years):", "es": "Edad (años):" },
+      "min": 0,
+      "max": 120,
+      "next": "q4"
+    },
+    "q4": {
+      "type": "multi",
+      "text": { "en": "Risk factors (select all that apply):", "es": "Factores de riesgo (selecciona todos):" },
+      "help": {
+        "en": "Common: HTN, HLD, diabetes, smoking, obesity, family history, atherosclerotic disease.",
+        "es": "Comunes: HTA, dislipidemia, diabetes, tabaco, obesidad, antecedente familiar, enfermedad aterosclerótica."
+      },
+      "options": [
+        { "value": "htn", "label": { "en": "Hypertension", "es": "Hipertensión" } },
+        { "value": "hld", "label": { "en": "Hyperlipidemia", "es": "Dislipidemia" } },
+        { "value": "dm", "label": { "en": "Diabetes", "es": "Diabetes" } },
+        { "value": "smoke", "label": { "en": "Smoking", "es": "Tabaquismo" } },
+        { "value": "obesity", "label": { "en": "Obesity", "es": "Obesidad" } },
+        { "value": "fhx", "label": { "en": "Family history CAD", "es": "Antecedente familiar de cardiopatía" } },
+        { "value": "ascvd", "label": { "en": "Known atherosclerotic disease", "es": "Enfermedad aterosclerótica conocida" } }
+      ],
+      "next": "q5",
+      "required": false
+    },
+    "q5": {
+      "type": "single",
+      "text": { "en": "Troponin category (per local lab/clinician):", "es": "Categoría de troponina (según lab/clínico):" },
+      "options": [
+        { "value": "normal", "label": { "en": "Normal", "es": "Normal" }, "next": "q6" },
+        { "value": "1to3x", "label": { "en": "1–3× normal limit", "es": "1–3× límite normal" }, "next": "q6" },
+        { "value": "gt3x", "label": { "en": ">3× normal limit", "es": ">3× límite normal" }, "next": "q6" }
+      ]
+    },
+    "q6": {
+      "type": "text",
+      "text": { "en": "Optional notes (no identifiers):", "es": "Notas opcionales (sin identificadores):" },
+      "placeholder": { "en": "Short clinical notes...", "es": "Notas clínicas breves..." },
+      "next": "end",
+      "required": false
+    }
+  },
+
+  "scoring": {
+    "enabled": true,
+    "rules": [
+      { "add": 0, "when": [{ "q": "q1", "equals": "slight" }] },
+      { "add": 1, "when": [{ "q": "q1", "equals": "moderate" }] },
+      { "add": 2, "when": [{ "q": "q1", "equals": "high" }] },
+
+      { "add": 0, "when": [{ "q": "q2", "equals": "normal" }] },
+      { "add": 1, "when": [{ "q": "q2", "equals": "nonspecific" }] },
+      { "add": 2, "when": [{ "q": "q2", "equals": "significant" }] },
+
+      { "add": 0, "when": [{ "q": "q3", "lt": 45 }] },
+      { "add": 1, "when": [{ "q": "q3", "gte": 45 }, { "q": "q3", "lt": 65 }] },
+      { "add": 2, "when": [{ "q": "q3", "gte": 65 }] },
+
+      { "add": 0, "when": [{ "q": "q4", "countLt": 3 }] },
+      { "add": 1, "when": [{ "q": "q4", "countGte": 3 }, { "q": "q4", "countLt": 6 }] },
+      { "add": 2, "when": [{ "q": "q4", "countGte": 6 }] },
+      { "add": 2, "when": [{ "q": "q4", "includes": "ascvd" }] },
+
+      { "add": 0, "when": [{ "q": "q5", "equals": "normal" }] },
+      { "add": 1, "when": [{ "q": "q5", "equals": "1to3x" }] },
+      { "add": 2, "when": [{ "q": "q5", "equals": "gt3x" }] }
+    ],
+    "outcomeByScore": [
+      { "min": 0, "max": 3, "outcome": "low" },
+      { "min": 4, "max": 6, "outcome": "moderate" },
+      { "min": 7, "max": 10, "outcome": "high" }
+    ]
+  },
+
+  "outcomes": {
+    "low": {
+      "label": { "en": "Lower risk band (score-based)", "es": "Banda de menor riesgo (por puntaje)" },
+      "badge": "ok",
+      "text": {
+        "en": "Score suggests a lower-risk band. Follow local chest pain protocol and clinician judgment.",
+        "es": "El puntaje sugiere menor riesgo. Sigue el protocolo local y el juicio clínico."
+      }
+    },
+    "moderate": {
+      "label": { "en": "Intermediate risk band (score-based)", "es": "Riesgo intermedio (por puntaje)" },
+      "badge": "neutral",
+      "text": {
+        "en": "Score suggests intermediate band. Consider senior review and protocol-based workup.",
+        "es": "Puntaje intermedio. Considera revisión senior y evaluación según protocolo."
+      }
+    },
+    "high": {
+      "label": { "en": "Higher risk band (score-based)", "es": "Mayor riesgo (por puntaje)" },
+      "badge": "danger",
+      "text": {
+        "en": "Score suggests higher band. Escalate per local protocol and clinician judgment.",
+        "es": "Puntaje alto. Escala según protocolo local y juicio clínico."
+      }
+    }
+  }
+}
