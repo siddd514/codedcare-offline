@@ -55,7 +55,9 @@ main{max-width:920px; margin:18px auto; padding:0 16px; display:grid; gap:14px}
   padding:14px;
 }
 .warning{border-color:rgba(255,107,107,0.35)}
-.hidden{display:none}
+.hidden{
+  display: none !important;
+}
 
 .topline{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
 .status{color:var(--muted); font-size:13px}
