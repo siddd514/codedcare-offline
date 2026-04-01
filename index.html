@@ -92,6 +92,7 @@
         <label class="lbl" id="speechLangLbl">Speech input language (what YOU speak)</label>
         <select id="speechLangSelect">
           <option value="en-US">English (US)</option>
+          <option value="en-GB">English (UK)</option>
           <option value="es-ES">Español (ES)</option>
           <option value="es-MX">Español (MX)</option>
           <option value="fr-FR">Français</option>
@@ -99,6 +100,16 @@
           <option value="sw-KE">Kiswahili (KE)</option>
           <option value="ar-SA">العربية</option>
         </select>
+
+        <!-- NEW: Voice picker for better accents -->
+        <label class="lbl" id="ttsVoiceLbl">Read-aloud voice (TTS)</label>
+        <select id="ttsVoiceSelect"></select>
+        <p class="hint" id="ttsVoiceHint">
+          Voices depend on the device. Pick one that sounds natural for the selected UI language.
+        </p>
+        <div class="actions">
+          <button id="testVoiceBtn" class="ghost" type="button">Test voice</button>
+        </div>
 
         <label class="lbl row" id="autoTranslateLbl">
           <input id="autoTranslateToggle" type="checkbox" />

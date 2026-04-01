@@ -1,4 +1,4 @@
-const CACHE_NAME = "codedcare-offline-v5";
+const CACHE_NAME = "codedcare-offline-v8";
 const ASSETS = [
   "./",
   "./index.html",
@@ -27,7 +27,6 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then(cached => {
       return cached || fetch(event.request).then(resp => {
-        // cache new GETs (helps if you add new modules later)
         if (event.request.method === "GET" && resp && resp.status === 200) {
           const copy = resp.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
