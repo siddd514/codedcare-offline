@@ -1,47 +1,60 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CodedCare (Offline)</title>
+
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0b1b2b" />
+  <meta name="theme-color" content="#071423" />
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-  <header>
+  <header class="topbar">
     <div class="brand">
       <div class="logo">CC</div>
-      <div>
+      <div class="brand-text">
         <h1>CodedCare</h1>
-        <p class="sub">Offline protocol navigator + clinical scores (training/decision-support)</p>
+        <p class="sub" id="brandSubtitle">Offline protocol navigator + clinical scores (training/decision-support)</p>
       </div>
     </div>
 
     <div class="header-actions">
-      <select id="moduleSelect" aria-label="Module"></select>
+      <div class="pill">
+        <span class="pill-label" id="moduleLabel">Module</span>
+        <select id="moduleSelect" aria-label="Module"></select>
+      </div>
 
-      <select id="uiLangSelect" aria-label="UI Language">
-        <option value="en">English</option>
-        <option value="es">Español</option>
-      </select>
+      <div class="pill">
+        <span class="pill-label" id="uiLangLabel">Language</span>
+        <select id="uiLangSelect" aria-label="UI Language">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="sw">Kiswahili</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
 
-      <button id="ttsBtn" class="ghost">Read Aloud: Off</button>
-      <button id="micBtn" class="ghost">Voice Input: Off</button>
+      <button id="ttsBtn" class="ghost">Read Aloud</button>
+      <button id="micBtn" class="ghost">Voice Input</button>
       <button id="settingsBtn" class="ghost">Settings</button>
-      <button id="resetBtn" class="ghost">Reset</button>
+      <button id="resetBtn" class="ghost danger">Reset</button>
     </div>
   </header>
 
   <main>
-    <section class="card warning">
-      <strong>Safety note:</strong>
-      This tool is for <strong>training/decision-support</strong>. It does <strong>not</strong> diagnose or replace clinical judgment.
-      Do not enter identifying patient information. If you enable auto-translate, do not speak sensitive details.
+    <section class="card warning" id="safetyNote">
+      <strong id="safetyTitle">Safety note:</strong>
+      <span id="safetyBody">
+        This tool is for <strong>training/decision-support</strong>. It does <strong>not</strong> diagnose or replace clinical judgment.
+        Do not enter identifying patient information.
+      </span>
     </section>
 
-    <section id="app" class="card">
+    <section id="app" class="card appcard">
       <div class="topline">
         <div id="status" class="status"></div>
         <div id="step" class="step"></div>
@@ -53,12 +66,12 @@
       <div class="actions">
         <button id="backBtn" class="ghost" disabled>Back</button>
         <button id="repeatBtn" class="ghost">Repeat</button>
-        <button id="nextBtn" disabled>Next</button>
+        <button id="nextBtn" class="primary" disabled>Next</button>
       </div>
     </section>
 
     <section id="summaryCard" class="card hidden">
-      <h2>Summary</h2>
+      <h2 id="summaryTitle">Summary</h2>
       <pre id="summaryText" class="summary"></pre>
       <div class="actions">
         <button id="copyBtn" class="ghost">Copy</button>
@@ -68,46 +81,47 @@
   </main>
 
   <!-- Settings modal -->
-  <div id="modalOverlay" class="modal-overlay hidden">
+  <div id="modalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal card">
       <div class="modal-head">
-        <h2>Settings</h2>
+        <h2 id="settingsTitle">Settings</h2>
         <button id="closeSettingsBtn" class="ghost">Close</button>
       </div>
 
       <div class="form">
-        <label class="lbl">Speech input language (what YOU speak)</label>
+        <label class="lbl" id="speechLangLbl">Speech input language (what YOU speak)</label>
         <select id="speechLangSelect">
           <option value="en-US">English (US)</option>
-          <option value="es-ES">Spanish (ES)</option>
-          <option value="es-MX">Spanish (MX)</option>
-          <option value="fr-FR">French</option>
-          <option value="hi-IN">Hindi</option>
-          <option value="sw-KE">Swahili (Kenya)</option>
-          <option value="ar-SA">Arabic</option>
+          <option value="es-ES">Español (ES)</option>
+          <option value="es-MX">Español (MX)</option>
+          <option value="fr-FR">Français</option>
+          <option value="hi-IN">हिन्दी (IN)</option>
+          <option value="sw-KE">Kiswahili (KE)</option>
+          <option value="ar-SA">العربية</option>
         </select>
 
-        <label class="lbl row">
+        <label class="lbl row" id="autoTranslateLbl">
           <input id="autoTranslateToggle" type="checkbox" />
           Auto-translate speech into UI language (online only)
         </label>
 
-        <label class="lbl">Translation endpoint (optional)</label>
-        <input id="translateEndpointInput" class="textin" placeholder="Example: https://libretranslate.de/translate" />
+        <label class="lbl" id="endpointLbl">Translation endpoint (optional)</label>
+        <input id="translateEndpointInput" class="textin"
+               placeholder="Example: https://libretranslate.de/translate" />
 
-        <p class="hint">
+        <p class="hint" id="endpointHint">
           If endpoint is blank, auto-translate is disabled. Public translation servers may be unreliable and are not for sensitive info.
         </p>
 
         <div class="actions">
-          <button id="saveSettingsBtn">Save</button>
+          <button id="saveSettingsBtn" class="primary">Save</button>
         </div>
       </div>
     </div>
   </div>
 
   <footer>
-    <small>Offline after first load. Content is stored locally. Voice recognition depends on browser support.</small>
+    <small id="footerText">Offline after first load. Voice recognition depends on browser support.</small>
   </footer>
 
   <script src="app.js"></script>
